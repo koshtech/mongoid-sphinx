@@ -66,7 +66,7 @@ module Mongoid
         puts '</sphinx:schema>'
         
         self.all.entries.each do |document|
-          sphinx_compatible_id = document['_id'].to_s.to_i - 100000000000000000000000
+          sphinx_compatible_id = document.sphinx_id
           if sphinx_compatible_id > 0
             puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
             
@@ -105,7 +105,6 @@ module Mongoid
                     else
                       document[key.to_s].to_s
                     end
-                  end
                 end 
                 puts "<#{key}>#{value}</#{key}>"
               end
@@ -146,11 +145,11 @@ module Mongoid
         
         if result and result[:status] == 0 and (matches = result[:matches])
           ids = matches.collect do |row|
-            (100000000000000000000000 + row[:doc]).to_s rescue nil
+            row[:doc]
           end.compact
           
           return ids if options[:raw] or ids.empty?
-          return self.find(ids)
+          return self.where( :sphinx_id.in => ids )
         else
           return []
         end
@@ -176,19 +175,15 @@ module Mongoid
       
       if result and result[:status] == 0 and (matches = result[:matches])
         ids = matches.collect do |row|
-          (100000000000000000000000 + row[:doc]).to_s rescue nil
+          row[:doc]
         end.compact
         
         return ids if options[:raw] or ids.empty?
-        return self.find(ids)
+        return self.where( :sphinx_id.in => ids )
       else
         return false
       end
     end    
     
-    private
-    def sphinx_id
-      self._id.to_s.to_i - 100000000000000000000000
-    end
   end
 end
