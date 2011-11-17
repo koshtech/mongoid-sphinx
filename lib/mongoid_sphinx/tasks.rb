@@ -78,6 +78,25 @@ namespace :mongoid_sphinx do
     Rake::Task["mongoid_sphinx:index"].invoke
     Rake::Task["mongoid_sphinx:start"].invoke
   end
+
+  desc "Run Sphinx in the foreground"
+  task :run_in_foreground => :environment do
+    Rake::Task["mongoid_sphinx:stop"].invoke if sphinx_running?
+    Rake::Task["mongoid_sphinx:index"].invoke
+    config = MongoidSphinx::Configuration.instance
+    $kill_sphinx_on_exit = false
+    unless pid = fork
+      exec "#{config.bin_path}#{config.searchd_binary_name} --pidfile --config #{config.config_file} --nodetach"
+    end
+    $kill_sphinx_on_exit = true
+    at_exit do
+      if $kill_sphinx_on_exit
+        Process.kill(:TERM, pid)
+      end
+    end
+    Process.wait
+  end
+
 end
 
 namespace :ms do
@@ -102,6 +121,8 @@ namespace :ms do
   task :config  => "mongoid_sphinx:configure"
   desc "Stop Sphinx (if it's running), rebuild the indexes, and start Sphinx"
   task :rebuild => "mongoid_sphinx:rebuild"
+  desc "Run Sphinx in the foreground"
+  task :run_in_foreground => "mongoid_sphinx:run_in_foreground"
 end
 
 def sphinx_pid
