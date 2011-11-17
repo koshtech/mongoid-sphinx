@@ -55,7 +55,6 @@ module MongoidSphinx
   def self.process_results(results, ids_only=false)
     if results and results[:status] == 0 and (matches = results[:matches])
       matches.map do |row|
-          ap row
         if !ids_only && (class_name = row.fetch(:attributes,{}).fetch('class_name',nil))
           class_name.constantize.where(:sphinx_id => row[:doc]).first rescue row[:doc]
         else
