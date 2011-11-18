@@ -1,4 +1,4 @@
-doc
-pkg
-tmp
-.redcar
+*.gem
+.bundle
+Gemfile.lock
+pkg/*

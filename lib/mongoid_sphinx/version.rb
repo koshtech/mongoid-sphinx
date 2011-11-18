@@ -1,3 +1,3 @@
-module MongoidSphinx #:nodoc
-  VERSION = "0.1.3"
+module MongoidSphinx
+  VERSION = "0.2.0"
 end
