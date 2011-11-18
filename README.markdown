@@ -2,7 +2,10 @@
 
 ## Fork info
 
-This is a fork of http://github.com/burke/mongosphinx with many changes to simplify and support Mongoid.
+This is a fork of a fork of http://github.com/burke/mongosphinx with many 
+changes to simplify and support Mongoid. In the future I will attempt to 
+generalize and remove activesupport dependency but at the moment this gem has
+Rails 3 and project specific features.
 
 ## General info
 
@@ -18,7 +21,7 @@ and a MongoDB installation. Just add this to your Gemfile:
 
     gem riddle
     gem mongoid
-    gem mongoidsphinx, :require => 'mongoid_sphinx'
+    gem mongoid-sphinx, :require => 'mongoid_sphinx', :git => 'git://github.com/llamadigital/mongoid-sphinx.git'
 
 No additional configuraton is needed for interfacing with MongoDB: Setup is
 done when Mongoid is able to talk to the MongoDB server.
@@ -34,6 +37,7 @@ make this happen is right out of TS). Here is a list of the available rake tasks
     mongoid_sphinx:start     # starts searchd
     mongoid_sphinx:stop      # stops searchd
     mongoid_sphinx:restart   # stops then start searchd
+    mongoid_sphinx:run_in_foreground   # runs searchd in foreground
     
 There are also some shortcuts you can use. See lib/mongoid_sphinx/tasks.rb for the full list.
 
