@@ -35,6 +35,14 @@ module Mongoid
 
     end
 
+    def excerpts(words, docs=nil)
+      #docs ||= self.attributes
+      #docs.except("_id","_type").each
+      #values = docs.values.map(&:to_s)
+      #values = MongoidSphinx::excerpts({words:words,docs:values,index:self.class.internal_sphinx_index.core_name})
+      #Hash[[docs.keys,values].transpose]
+    end
+
     module ClassMethods
 
       def search_index(options={})
@@ -129,17 +137,15 @@ module Mongoid
       end
 
       def search(query, options = {})
-        options(:class => self)
+        options[:ids_only] = true
         ids = MongoidSphinx::search(query, options)
-        return ids if options[:raw] or ids.empty?
-        return self.where( :sphinx_id.in => ids )
+        return self.where(:sphinx_id.in => ids)
       end
 
       def search_ids(id_range, options = {})
-        options(:class => self)
+        options[:ids_only] = true
         ids = MongoidSphinx::search_ids(id_range, options)
-        return ids if options[:raw] or ids.empty?
-        return self.where( :sphinx_id.in => ids )
+        return self.where(:sphinx_id.in => ids)
       end
     end
 

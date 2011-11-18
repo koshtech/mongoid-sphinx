@@ -32,6 +32,11 @@ module MongoidSphinx
     process_results(results, options.fetch(:ids_only,false))
   end
 
+  def self.excerpts(options = {})
+    client = MongoidSphinx::Configuration.instance.client
+    client.excerpts(options)
+  end
+
   def self.search_ids(id_range, options = {})
     client = MongoidSphinx::Configuration.instance.client
 
@@ -51,7 +56,7 @@ module MongoidSphinx
     results = client.query('*')
     process_results(results,options.fetch(:ids_only,false))
   end
-  
+
   def self.process_results(results, ids_only=false)
     if results and results[:status] == 0 and (matches = results[:matches])
       matches.map do |row|
