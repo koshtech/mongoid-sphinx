@@ -1,10 +1,10 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "mongoid-sphinx/version"
+require "./lib/mongoid_sphinx/version"
 
 Gem::Specification.new do |s|
   s.name        = "mongoid-sphinx"
-  s.version     = Mongoid::Sphinx::VERSION
+  s.version     = MongoidSphinx::VERSION
   s.authors     = ["Jon Doveston"]
   s.platform    = Gem::Platform::RUBY
   s.email       = ["jon@llamadigital.net"]
@@ -22,7 +22,7 @@ EOF
   s.require_paths = ["lib"]
 
   # s.add_development_dependency "rspec"
-  s.add_runtime_dependency "mongoid", ["~> 2.0.0"]
+  s.add_runtime_dependency "mongoid", ["~> 2.4.0"]
   s.add_dependency "riddle", ["~> 1.5.0"]
   s.add_dependency "activesupport", ["~> 3.1.0"]
 end
