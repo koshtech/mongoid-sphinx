@@ -26,3 +26,4 @@ EOF
   s.add_dependency "riddle", ["~> 1.5.0"]
   s.add_dependency "activesupport", ["~> 3.1.0"]
 end
+
