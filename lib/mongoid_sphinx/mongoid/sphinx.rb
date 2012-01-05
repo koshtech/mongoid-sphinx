@@ -89,7 +89,7 @@ module Mongoid
           sphinx_compatible_id = document.sphinx_id
           if !sphinx_compatible_id.nil? && sphinx_compatible_id > 0
             puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
-            puts "<class_name>#{self.to_s}</class_name>"
+            puts "<class_name>#{document.class.to_s}</class_name>"
             self.search_fields.each do |key|
               if document.respond_to?(key.to_sym)
                 value = document.send(key.to_sym)
@@ -127,7 +127,7 @@ module Mongoid
                       value.to_s
                     end
                 end
-                puts "<#{key}>#{value}</#{key}>"
+                puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
               end
             end
             puts '</sphinx:document>'
