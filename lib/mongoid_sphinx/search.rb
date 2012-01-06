@@ -2,39 +2,45 @@
 
 module MongoidSphinx
 
+  def self.default_client(options={})
+    MongoidSphinx::Configuration.instance.client.tap do |client|
+    
+      client.match_mode = options[:match_mode] || :extended
+      client.limit = options[:limit] if options.key?(:limit)
+      client.max_matches = options[:max_matches] if options.key?(:max_matches)
+  
+      if options.key?(:sort_by)
+        client.sort_mode = :extended
+        client.sort_by = options[:sort_by]
+      end
+  
+      client.filters << Riddle::Client::Filter.new('class_name', options[:class].name.to_a, false) if options.key?(:class)
+  
+      if options.key?(:with)
+        options[:with].each do |key, value|
+          client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, false)
+        end
+      end
+  
+      if options.key?(:without)
+        options[:without].each do |key, value|
+          client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, true)
+        end
+      end
+
+    end
+  end
+
   def self.search(query, options = {})
-    client = MongoidSphinx::Configuration.instance.client
-
-    client.match_mode = options[:match_mode] || :extended
-    client.limit = options[:limit] if options.key?(:limit)
-    client.max_matches = options[:max_matches] if options.key?(:max_matches)
-
-    if options.key?(:sort_by)
-      client.sort_mode = :extended
-      client.sort_by = options[:sort_by]
-    end
-
-    client.filters << Riddle::Client::Filter.new('class_name', options[:class].name.to_a, false) if options.key?(:class)
-
-    if options.key?(:with)
-      options[:with].each do |key, value|
-        client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, false)
-      end
-    end
-
-    if options.key?(:without)
-      options[:without].each do |key, value|
-        client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, true)
-      end
-    end
-
+    client = default_client(options)
     results = client.query(query)
     process_results(results, options.fetch(:ids_only,false))
   end
 
-  def self.excerpts(options = {})
-    client = MongoidSphinx::Configuration.instance.client
-    client.excerpts(options)
+  def self.excerpts(words, docs, index, options = {})
+  ap docs
+    client = default_client(options)
+    client.excerpts(options.merge({words:words, docs:docs, index:index}))
   end
 
   def self.search_ids(id_range, options = {})

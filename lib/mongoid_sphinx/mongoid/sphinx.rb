@@ -35,11 +35,12 @@ module Mongoid
 
     end
 
-    def excerpts(words, docs=nil)
-      #docs ||= self.attributes
-      #docs.except("_id","_type").each
-      #values = docs.values.map(&:to_s)
-      #values = MongoidSphinx::excerpts({words:words,docs:values,index:self.class.internal_sphinx_index.core_name})
+    def excerpts(words, options={})   
+      return MongoidSphinx::excerpts(
+        words,
+        self.class.get_fields(self).values,
+        self.class.internal_sphinx_index.core_name,
+        options)
       #Hash[[docs.keys,values].transpose]
     end
 
@@ -90,22 +91,9 @@ module Mongoid
           if !sphinx_compatible_id.nil? && sphinx_compatible_id > 0
             puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
             puts "<class_name>#{document.class.to_s}</class_name>"
-            self.search_fields.each do |key|
-              if document.respond_to?(key.to_sym)
-                value = document.send(key.to_sym)
-                if value.is_a?(Array)
-                  puts "<#{key}><![CDATA[[#{value.join(", ")}]]></#{key}>"
-                elsif value.is_a?(Hash)
-                  entries = []
-                  value.to_a.each do |entry|
-                    entries << entry.join(" : ")
-                  end
-                  puts "<#{key}><![CDATA[[#{entries.join(", ")}]]></#{key}>"
-                else
-                  puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
-                end
-              end
-            end
+            
+            self.get_fields(document).each{ |key, value| puts "<#{key}><![CDATA[[#{value}]]></#{key}>" }
+            
             self.search_attributes.each do |key, type|
               if document.respond_to?(key.to_sym)
                 value = document.send(key.to_sym)
@@ -134,6 +122,24 @@ module Mongoid
           end
         end
         puts '</sphinx:docset>'
+      end
+      
+      def get_fields(document)
+        {}.tap do |fields|
+          self.search_fields.each do |key|
+            if document.respond_to?(key.to_sym)
+              value = document.send(key.to_sym)
+              value = if value.is_a?(Array)
+                value.join(", ")
+              elsif value.is_a?(Hash)
+                value.values.join(" : ")
+              else
+                value.to_s
+              end
+              fields[key] = value
+            end
+          end
+        end
       end
 
       def search(query, options = {})
