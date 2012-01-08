@@ -38,7 +38,6 @@ module MongoidSphinx
   end
 
   def self.excerpts(words, docs, index, options = {})
-  ap docs
     client = default_client(options)
     client.excerpts(options.merge({words:words, docs:docs, index:index}))
   end
