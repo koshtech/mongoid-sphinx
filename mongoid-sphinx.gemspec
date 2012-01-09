@@ -21,9 +21,9 @@ EOF
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  # s.add_development_dependency "rspec"
   s.add_runtime_dependency "mongoid", [">= 2.3.0"]
   s.add_dependency "riddle", ["~> 1.5.0"]
   s.add_dependency "activesupport", ["~> 3.1.0"]
+  s.add_development_dependency "minitest"
 end
 

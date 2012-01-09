@@ -36,13 +36,15 @@ module Mongoid
     end
 
     def excerpts(words, options={})   
-      return MongoidSphinx::excerpts(
+      fields = self.class.get_fields(self)
+      values = MongoidSphinx::excerpts(
         words,
-        self.class.get_fields(self).values,
+        fields.values,
         self.class.internal_sphinx_index.core_name,
         options)
-      #Hash[[docs.keys,values].transpose]
+      Hash[[fields.keys,values].transpose]
     end
+    alias :sphinx_excerpts :excerpts
 
     module ClassMethods
 
