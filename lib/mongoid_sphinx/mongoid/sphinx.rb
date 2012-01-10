@@ -49,7 +49,7 @@ module Mongoid
     module ClassMethods
 
       def search_index(options={})
-        self.search_fields = options[:fields]
+        self.search_fields = options[:fields] || []
         self.search_attributes = {}
         self.index_options = options[:options] || {}
         options[:attributes].each do |attribute, type|
@@ -73,73 +73,75 @@ module Mongoid
 
       def sphinx_stream
         STDOUT.sync = true # Make sure we really stream..
+        puts generate_stream
+      end
 
-        puts '<?xml version="1.0" encoding="utf-8"?>'
-        puts '<sphinx:docset>'
+      def generate_stream
+        xml = ['<?xml version="1.0" encoding="utf-8"?>']
+        xml << '<sphinx:docset xmlns:sphinx="">'
 
         # Schema
-        puts '<sphinx:schema>'
+        xml << '<sphinx:schema>'
         self.search_fields.each do |key, value|
-          puts "<sphinx:field name=\"#{key}\"/>"
+          xml << "<sphinx:field name=\"#{key}\"/>"
         end
-        puts '<sphinx:attr name="class_name" type="string"/>'
+        xml << '<sphinx:attr name="class_name" type="string"/>'
         self.search_attributes.each do |key, value|
-          puts "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
+          xml << "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
         end
-        puts '</sphinx:schema>'
+        xml << '</sphinx:schema>'
 
         self.all.each do |document|
           sphinx_compatible_id = document.sphinx_id
           if !sphinx_compatible_id.nil? && sphinx_compatible_id > 0
-            puts "<sphinx:document id=\"#{sphinx_compatible_id}\">"
-            puts "<class_name>#{document.class.to_s}</class_name>"
-            
-            self.get_fields(document).each{ |key, value| puts "<#{key}><![CDATA[[#{value}]]></#{key}>" }
-            
-            self.search_attributes.each do |key, type|
-              if document.respond_to?(key.to_sym)
-                value = document.send(key.to_sym)
-                value = case type
-                  when 'bool'
-                    value ? 1 : 0
-                  when 'timestamp'
-                    value.is_a?(Date) ? value.to_time.to_i : value.to_i
-                  else
-                    if value.is_a?(Array)
-                      value.join(", ")
-                    elsif value.is_a?(Hash)
-                      entries = []
-                      value.to_a.each do |entry|
-                        entries << entry.join(" : ")
-                      end
-                      entries.join(", ")
-                    else
-                      value.to_s
-                    end
-                end
-                puts "<#{key}><![CDATA[[#{value}]]></#{key}>"
-              end
-            end
-            puts '</sphinx:document>'
+            xml << "<sphinx:document id=\"#{sphinx_compatible_id}\">"
+            xml << "<class_name>#{document.class.to_s}</class_name>"
+            self.get_fields(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" if value.present? }
+            self.get_attributes(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" }
+            xml << '</sphinx:document>'
           end
         end
-        puts '</sphinx:docset>'
+        xml << '</sphinx:docset>'
+        xml.join("\n")
       end
-      
-      def get_fields(document)
-        {}.tap do |fields|
-          self.search_fields.each do |key|
-            if document.respond_to?(key.to_sym)
-              value = document.send(key.to_sym)
-              value = if value.is_a?(Array)
+
+      def get_attributes(document)
+        {}.tap do |attributes|
+        self.search_attributes.each do |key, type|
+          next unless document.respond_to?(key.to_sym)
+          value = document.send(key.to_sym)
+          value = case type
+            when 'bool'
+              value ? 1 : 0
+            when 'timestamp'
+              value.is_a?(Date) ? value.to_time.to_i : value.to_i
+            else
+              if value.is_a?(Array)
                 value.join(", ")
               elsif value.is_a?(Hash)
                 value.values.join(" : ")
               else
                 value.to_s
               end
-              fields[key] = value
             end
+          attributes[key] = value
+          end
+        end
+      end
+      
+      def get_fields(document)
+        {}.tap do |fields|
+          self.search_fields.each do |key|
+            next unless document.respond_to?(key.to_sym)
+            value = document.send(key.to_sym)
+            value = if value.is_a?(Array)
+              value.join(", ")
+            elsif value.is_a?(Hash)
+              value.values.join(" : ")
+            else
+              value.to_s
+            end
+            fields[key] = value
           end
         end
       end

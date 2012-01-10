@@ -24,6 +24,14 @@ EOF
   s.add_runtime_dependency "mongoid", [">= 2.3.0"]
   s.add_dependency "riddle", ["~> 1.5.0"]
   s.add_dependency "activesupport", ["~> 3.1.0"]
+  s.add_development_dependency "bson_ext", ["~> 1.5.1"]
   s.add_development_dependency "minitest"
+  s.add_development_dependency "rake"
+  s.add_development_dependency "guard"
+  s.add_development_dependency "faker"
+
+  # s.add_development_dependency "guard-minitest"
+  s.add_development_dependency "libnotify"
+  s.add_development_dependency "rb-inotify"
 end
 
