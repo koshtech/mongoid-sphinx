@@ -22,12 +22,12 @@ module Mongoid
       cattr_accessor :index_options
       cattr_accessor :sphinx_index
 
-      set_callback :create, :after do
+      set_callback :create, :before do
         sid = while true
           candidate = rand(2**63-2)+1
           break candidate if self.class.where(:sphinx_id => candidate).blank?
         end
-        self.update_attributes(:sphinx_id => sid)
+        self.sphinx_id = sid
       end
 
       field :sphinx_id, :type => Integer
