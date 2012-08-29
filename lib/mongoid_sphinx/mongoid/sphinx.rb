@@ -32,7 +32,6 @@ module Mongoid
 
       field :sphinx_id, :type => Integer
       index :sphinx_id, unique: true
-
     end
 
     def excerpts(words, options={})   
@@ -47,7 +46,6 @@ module Mongoid
     alias :sphinx_excerpts :excerpts
 
     module ClassMethods
-
       def search_index(options={})
         self.search_fields = options[:fields] || []
         self.search_attributes = {}
@@ -91,7 +89,7 @@ module Mongoid
         end
         xml << '</sphinx:schema>'
 
-        self.all.each do |document|
+        self.sphinx_models.each do |document|
           sphinx_compatible_id = document.sphinx_id
           if !sphinx_compatible_id.nil? && sphinx_compatible_id > 0
             xml << "<sphinx:document id=\"#{sphinx_compatible_id}\">"
@@ -157,8 +155,11 @@ module Mongoid
         ids = MongoidSphinx::search_ids(id_range, options)
         return self.where(:sphinx_id.in => ids)
       end
-    end
 
+      def sphinx_models
+        self.embedded? ? [] : self.all
+      end
+    end
   end
 end
 

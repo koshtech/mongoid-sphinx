@@ -1,7 +1,7 @@
-require "mongoid"
-require "riddle"
+require 'mongoid'
+require 'riddle'
 
-require "mongoid_sphinx/version"
+require 'mongoid_sphinx/version'
 require 'mongoid_sphinx/configuration'
 require 'mongoid_sphinx/context'
 require 'mongoid_sphinx/index'
@@ -10,7 +10,6 @@ require 'mongoid_sphinx/mongoid/sphinx'
 require 'mongoid_sphinx/railtie' if defined?(Rails)
 
 module MongoidSphinx
-
   @@sphinx_mutex = Mutex.new
   @@context = nil
 
@@ -52,6 +51,5 @@ module MongoidSphinx
       nil
     end
   end
-
 end
 
