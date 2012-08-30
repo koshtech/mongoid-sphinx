@@ -32,7 +32,6 @@ This is a fork of a fork of a fork and all due credit goes out to Matt Hodgson a
   s.add_development_dependency 'guard',     '>= 1.3.2'
   s.add_development_dependency 'guard-rspec'
 
-  s.add_development_dependency 'libnotify'
   s.add_development_dependency 'rb-inotify'
 end
 

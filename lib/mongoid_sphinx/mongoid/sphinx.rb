@@ -22,14 +22,6 @@ module Mongoid
       cattr_accessor :index_options
       cattr_accessor :sphinx_index
 
-      set_callback :create, :before do
-        sid = while true
-          candidate = rand(2**63-2)+1
-          break candidate if self.class.where(:sphinx_id => candidate).blank?
-        end
-        self.sphinx_id = sid
-      end
-
       field :sphinx_id, :type => Integer
       index :sphinx_id, unique: true
     end
@@ -44,6 +36,24 @@ module Mongoid
       Hash[[fields.keys,values].transpose]
     end
     alias :sphinx_excerpts :excerpts
+
+    # override this method
+    def generate_sphinx_id(bits=63)
+      unless embedded?
+        loop do
+          candidate = Random.new.rand(2**bits-1)+1
+          break candidate if self.class.where(:sphinx_id => candidate).empty?
+        end
+      else
+        nil
+      end
+    end
+
+    def generate_sphinx_id_and_save
+      sid = sphinx_id || generate_sphinx_id
+      update_attributes(sphinx_id:sid)
+      sid
+    end
 
     module ClassMethods
       def search_index(options={})
@@ -62,11 +72,11 @@ module Mongoid
       end
 
       def has_sphinx_indexes?
-        self.search_fields && self.search_fields.length > 0
+        search_fields && search_fields.length > 0
       end
 
       def to_riddle
-        self.internal_sphinx_index.to_riddle
+        internal_sphinx_index.to_riddle
       end
 
       def sphinx_stream
@@ -80,22 +90,22 @@ module Mongoid
 
         # Schema
         xml << '<sphinx:schema>'
-        self.search_fields.each do |key, value|
+        search_fields.each do |key, value|
           xml << "<sphinx:field name=\"#{key}\"/>"
         end
         xml << '<sphinx:attr name="class_name" type="string"/>'
-        self.search_attributes.each do |key, value|
+        search_attributes.each do |key, value|
           xml << "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
         end
         xml << '</sphinx:schema>'
 
-        self.sphinx_models.each do |document|
-          sphinx_compatible_id = document.sphinx_id
+        sphinx_models.each do |document|
+          sphinx_compatible_id = document.generate_sphinx_id_and_save
           if !sphinx_compatible_id.nil? && sphinx_compatible_id > 0
             xml << "<sphinx:document id=\"#{sphinx_compatible_id}\">"
             xml << "<class_name>#{document.class.to_s}</class_name>"
-            self.get_fields(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" if value.present? }
-            self.get_attributes(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" }
+            get_fields(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" if value.present? }
+            get_attributes(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" }
             xml << '</sphinx:document>'
           end
         end
@@ -105,7 +115,7 @@ module Mongoid
 
       def get_attributes(document)
         {}.tap do |attributes|
-        self.search_attributes.each do |key, type|
+        search_attributes.each do |key, type|
           next unless document.respond_to?(key.to_sym)
           value = document.send(key.to_sym)
           value = case type
@@ -129,7 +139,7 @@ module Mongoid
       
       def get_fields(document)
         {}.tap do |fields|
-          self.search_fields.each do |key|
+          search_fields.each do |key|
             next unless document.respond_to?(key.to_sym)
             value = document.send(key.to_sym)
             value = if value.is_a?(Array)
@@ -147,19 +157,19 @@ module Mongoid
       def search(query, options = {})
         options[:ids_only] = true
         ids = MongoidSphinx::search(query, options)
-        return self.where(:sphinx_id.in => ids)
+        return where(:sphinx_id.in => ids)
       end
 
       def search_ids(id_range, options = {})
         options[:ids_only] = true
         ids = MongoidSphinx::search_ids(id_range, options)
-        return self.where(:sphinx_id.in => ids)
+        return where(:sphinx_id.in => ids)
       end
 
+      # override this method
       def sphinx_models
-        self.embedded? ? [] : self.all
+        embedded? ? [] : all
       end
     end
   end
 end
-
