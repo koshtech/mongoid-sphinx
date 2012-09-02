@@ -123,12 +123,12 @@ describe Mongoid::Sphinx do
   describe "embedded stream generation" do
     let(:doc) { EmbeddedModel.generate_stream }
     specify { EmbeddedModel.sphinx_models.should be == [model.embedded_model] }
-    specify { p doc }
+    # specify { p doc }
   end
 
   describe "double embedded stream generation" do
     let(:doc) { DoubleEmbeddedModel.generate_stream }
     specify { DoubleEmbeddedModel.sphinx_models.should be == [model.embedded_model.double_embedded_model] }
-    specify { p doc }
+    # specify { p doc }
   end
 end

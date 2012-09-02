@@ -1,10 +1,8 @@
 # MongoidSphinx, a full text indexing extension for MongoDB/Mongoid using Sphinx.
 
 module MongoidSphinx
-
   def self.default_client(options={})
     MongoidSphinx::Configuration.instance.client.tap do |client|
-    
       client.match_mode = options[:match_mode] || :extended
       client.limit = options[:limit] if options.key?(:limit)
       client.max_matches = options[:max_matches] if options.key?(:max_matches)
@@ -27,7 +25,6 @@ module MongoidSphinx
           client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, true)
         end
       end
-
     end
   end
 
@@ -75,6 +72,5 @@ module MongoidSphinx
       []
     end
   end
-
 end
 

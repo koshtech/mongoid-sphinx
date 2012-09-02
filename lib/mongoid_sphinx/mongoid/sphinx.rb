@@ -154,16 +154,23 @@ module Mongoid
         end
       end
 
+      # override this method to process embedded ids
       def search(query, options = {})
+        # only return ids from search
         options[:ids_only] = true
         ids = MongoidSphinx::search(query, options)
-        return where(:sphinx_id.in => ids)
+        unless embedded
+          where(:sphinx_id.in => ids)
+        else
+          ids
+        end
       end
 
+      # this searches an id range or array of documents
       def search_ids(id_range, options = {})
+        # only return ids from search
         options[:ids_only] = true
-        ids = MongoidSphinx::search_ids(id_range, options)
-        return where(:sphinx_id.in => ids)
+        MongoidSphinx::search_ids(id_range, options)
       end
 
       # override this method

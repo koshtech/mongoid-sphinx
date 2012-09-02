@@ -34,16 +34,13 @@ class MongoidSphinx::Context
   # Make sure all models are loaded - without reloading any that
   # ActiveRecord::Base is already aware of (otherwise we start to hit some
   # messy dependencies issues).
-  #
   def load_models
     MongoidSphinx::Configuration.instance.model_directories.each do |base|
       Dir["#{base}**/*.rb"].each do |file|
         model_name = file.gsub(/^#{base}([\w_\/\\]+)\.rb/, '\1')
         
         next if model_name.nil?
-        next if defined?(::ActiveRecord::Base) && ::ActiveRecord::Base.send(:descendants).detect { |model|
-          model.name == model_name.camelize
-        }
+        next if defined?(::ActiveRecord::Base) && ::ActiveRecord::Base.send(:descendants).detect { |model| model.name == model_name.camelize }
         
         begin
           model_name.camelize.constantize

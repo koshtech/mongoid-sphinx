@@ -33,20 +33,15 @@ module MongoidSphinx
 
       @controller = Riddle::Controller.new @configuration, "#{@root}/config/#{@env}.sphinx.conf"
 
-      self.address              = "127.0.0.1"
+      self.address              = '127.0.0.1'
       self.port                 = 9312
       self.searchd_file_path    = "#{@root}/db/sphinx/#{@env}"
       self.allow_star           = false
       self.model_directories    = ["#{@root}/app/models/"] + Dir.glob("#{@root}/vendor/plugins/*/app/models/")
       self.indexed_models       = []
 
-      self.source_options  = {
-        :type => "xmlpipe2"
-      }
-      self.index_options   = {
-        :charset_type => "utf-8",
-        :morphology => "stem_en"
-      }
+      self.source_options  = { :type => 'xmlpipe2' }
+      self.index_options   = { :charset_type => 'utf-8', :morphology => 'stem_en' }
 
       parse_config
 
@@ -68,7 +63,7 @@ module MongoidSphinx
         @configuration.indices.concat model.to_riddle
       end
 
-      open(file_path, "w") do |file|
+      open(file_path, 'w') do |file|
         file.write @configuration.render
       end
     end
