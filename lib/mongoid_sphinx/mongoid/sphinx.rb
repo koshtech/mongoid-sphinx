@@ -1,4 +1,4 @@
-# MongoidSphinx, a full text indexing extension for MongoDB/Mongoid using Sphinx.
+require 'digest'
 
 module Mongoid
   module Sphinx
@@ -94,6 +94,7 @@ module Mongoid
           xml << "<sphinx:field name=\"#{key}\"/>"
         end
         xml << '<sphinx:attr name="class_name" type="string"/>'
+        xml << '<sphinx:attr name="class_filter" type="int" bits="64"/>'
         search_attributes.each do |key, value|
           xml << "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
         end
@@ -104,6 +105,7 @@ module Mongoid
           if !sphinx_compatible_id.nil? && sphinx_compatible_id > 0
             xml << "<sphinx:document id=\"#{sphinx_compatible_id}\">"
             xml << "<class_name>#{document.class.to_s}</class_name>"
+            xml << "<class_filter>#{MongoidSphinx::class_filter(document.class)}</class_filter>"
             get_fields(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" if value.present? }
             get_attributes(document).each{ |key, value| xml << "<#{key}>#{value}</#{key}>" }
             xml << '</sphinx:document>'
@@ -157,7 +159,7 @@ module Mongoid
       # override this method to process embedded ids
       def search(query, options = {})
         ids = MongoidSphinx::search(query, options.merge(:class => self))
-        ids = ids.reject{ |id| id.class_name!=self.name }
+        # ids = ids.reject{ |id| id.class_name!=self.to_s }
         ids = ids.map(&:sphinx_id)
         if embedded?
           ids

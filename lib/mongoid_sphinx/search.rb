@@ -12,8 +12,7 @@ module MongoidSphinx
         client.sort_by = options[:sort_by]
       end
 
-      # TODO: I cant get this to work, always returns no results
-      # client.filters << Riddle::Client::Filter.new('class_name', options[:class].name.to_a, false) if options.key?(:class)
+      client.filters << Riddle::Client::Filter.new('class_filter', class_filter(options[:class]).to_a, false) if options.key?(:class)
 
       if options.key?(:with)
         options[:with].each do |key, value|
@@ -27,6 +26,10 @@ module MongoidSphinx
         end
       end
     end
+  end
+
+  def self.class_filter(klass)
+    Digest::MD5.hexdigest(klass.to_s)[0...16].hex
   end
 
   def self.search(query, options = {})
