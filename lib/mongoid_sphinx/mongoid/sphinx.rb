@@ -105,7 +105,7 @@ module Mongoid
             xml << "<sphinx:document id=\"#{sphinx_compatible_id}\">"
             xml << "<class_name>#{document.class.to_s}</class_name>"
             get_fields(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" if value.present? }
-            get_attributes(document).each{ |key, value| xml << "<#{key}><![CDATA[[#{value}]]></#{key}>" }
+            get_attributes(document).each{ |key, value| xml << "<#{key}>#{value}</#{key}>" }
             xml << '</sphinx:document>'
           end
         end
