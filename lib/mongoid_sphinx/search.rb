@@ -1,3 +1,4 @@
+require 'zlib'
 require 'ostruct'
 
 module MongoidSphinx
@@ -29,7 +30,7 @@ module MongoidSphinx
   end
 
   def self.class_filter(klass)
-    Digest::MD5.hexdigest(klass.to_s)[0...16].hex
+    Zlib::crc32(klass.to_s) & 0xffffffff
   end
 
   def self.search(query, options = {})
@@ -57,8 +58,7 @@ module MongoidSphinx
     client.match_mode = :extended
     client.limit = options[:limit] if options.key?(:limit)
     client.max_matches = options[:max_matches] if options.key?(:max_matches)
-    # TODO: I cant get this to work, always returns no results
-    # client.filters << Riddle::Client::Filter.new('class_name', options[:class].name.to_a, false) if options.key?(:class)
+    client.filters << Riddle::Client::Filter.new('class_filter', [class_filter(options[:class])], false) if options.key?(:class)
 
     results = client.query('*')
     process_results(results)

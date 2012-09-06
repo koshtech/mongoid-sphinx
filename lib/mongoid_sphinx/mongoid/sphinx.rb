@@ -1,5 +1,3 @@
-require 'digest'
-
 module Mongoid
   module Sphinx
     extend ActiveSupport::Concern
@@ -94,7 +92,7 @@ module Mongoid
           xml << "<sphinx:field name=\"#{key}\"/>"
         end
         xml << '<sphinx:attr name="class_name" type="string"/>'
-        xml << '<sphinx:attr name="class_filter" type="int" bits="64"/>'
+        xml << '<sphinx:attr name="class_filter" type="int" bits="32"/>'
         search_attributes.each do |key, value|
           xml << "<sphinx:attr name=\"#{key}\" type=\"#{value}\"/>"
         end
@@ -159,7 +157,6 @@ module Mongoid
       # override this method to process embedded ids
       def search(query, options = {})
         ids = MongoidSphinx::search(query, options.merge(:class => self))
-        # ids = ids.reject{ |id| id.class_name!=self.to_s }
         ids = ids.map(&:sphinx_id)
         if embedded?
           ids
