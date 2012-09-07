@@ -14,7 +14,7 @@ module MongoidSphinx
       end
 
       if classes = options[:class]
-        classes = Array[classes].map{ |klass| class_filter(klass) }
+        classes = Array(classes).map{ |klass| class_filter(klass) }
         client.filters << Riddle::Client::Filter.new('class_filter', classes, false)
       end
 
