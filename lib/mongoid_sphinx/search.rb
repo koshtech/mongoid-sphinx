@@ -13,7 +13,10 @@ module MongoidSphinx
         client.sort_by = options[:sort_by]
       end
 
-      client.filters << Riddle::Client::Filter.new('class_filter', [class_filter(options[:class])], false) if options.key?(:class)
+      if classes = options[:class]
+        classes = Array[classes].map{ |klass| class_filter(klass) }
+        client.filters << Riddle::Client::Filter.new('class_filter', classes, false)
+      end
 
       if options.key?(:with)
         options[:with].each do |key, value|
