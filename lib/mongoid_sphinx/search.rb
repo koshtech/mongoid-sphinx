@@ -13,11 +13,6 @@ module MongoidSphinx
         client.sort_by = options[:sort_by]
       end
 
-      if classes = options[:class]
-        classes = Array(classes).map{ |klass| class_filter(klass) }
-        client.filters << Riddle::Client::Filter.new('class_filter', classes, false)
-      end
-
       if options.key?(:with)
         options[:with].each do |key, value|
           client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, false)
@@ -38,7 +33,7 @@ module MongoidSphinx
 
   def self.search(query, options = {})
     client = default_client(options)
-    results = client.query(query)
+    results = client.query(query, options[:index] || '*')
     process_results(results)
   end
 
@@ -61,9 +56,12 @@ module MongoidSphinx
     client.match_mode = :extended
     client.limit = options[:limit] if options.key?(:limit)
     client.max_matches = options[:max_matches] if options.key?(:max_matches)
-    client.filters << Riddle::Client::Filter.new('class_filter', [class_filter(options[:class])], false) if options.key?(:class)
+    if classes = options[:class]
+      classes = Array(classes).map{ |klass| class_filter(klass) }
+      client.filters << Riddle::Client::Filter.new('class_filter', classes, false)
+    end
 
-    results = client.query('*')
+    results = client.query('*', options[:index] || '*')
     process_results(results)
   end
 
