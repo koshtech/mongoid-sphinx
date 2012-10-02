@@ -24,6 +24,11 @@ module MongoidSphinx
           client.filters << Riddle::Client::Filter.new(key.to_s, value.is_a?(Range) ? value : value.to_a, true)
         end
       end
+
+      if classes = options[:class]
+        classes = Array(classes).map{ |klass| class_filter(klass) }
+        client.filters << Riddle::Client::Filter.new('class_filter', classes, false)
+      end
     end
   end
 
