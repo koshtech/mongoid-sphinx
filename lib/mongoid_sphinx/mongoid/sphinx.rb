@@ -21,10 +21,13 @@ module Mongoid
       cattr_accessor :sphinx_index
 
       field :sphinx_id, :type => Integer
+      field :delta, :type => Boolean, :default => false
       index :sphinx_id, unique: true
+
+      scope :delta, where(:delta => true)
     end
 
-    def excerpts(words, options={})   
+    def excerpts(words, options={})
       fields = self.class.get_fields(self)
       values = MongoidSphinx::excerpts(
         words,
@@ -53,6 +56,12 @@ module Mongoid
       sid
     end
 
+    def index_delta
+      config = MongoidSphinx::Configuration.instance
+      rotate = MongoidSphinx.sphinx_running? ? '--rotate' : ''
+      `#{config.bin_path}#{config.indexer_binary_name} --config "#{config.config_file}" #{rotate} #{sphinx_index.delta_name}`
+    end
+
     module ClassMethods
       def search_index(options={})
         self.search_fields = options[:fields] || []
@@ -63,6 +72,10 @@ module Mongoid
         end
 
         MongoidSphinx.context.add_indexed_model self
+      end
+
+      def delta?
+        true
       end
 
       def internal_sphinx_index
@@ -79,10 +92,15 @@ module Mongoid
 
       def sphinx_stream
         STDOUT.sync = true # Make sure we really stream..
-        puts generate_stream
+        puts generate_stream(false)
       end
 
-      def generate_stream
+      def delta_stream
+        STDOUT.sync = true # Make sure we really stream..
+        puts generate_stream(true)
+      end
+
+      def generate_stream(delta = false)
         xml = ['<?xml version="1.0" encoding="utf-8"?>']
         xml << '<sphinx:docset xmlns:sphinx="">'
 
@@ -98,7 +116,7 @@ module Mongoid
         end
         xml << '</sphinx:schema>'
 
-        sphinx_models.each do |document|
+        (delta ? delta_models : sphinx_models).each do |document|
           sphinx_compatible_id = document.generate_sphinx_id_and_save
           if !sphinx_compatible_id.nil? && sphinx_compatible_id > 0
             xml << "<sphinx:document id=\"#{sphinx_compatible_id}\">"
@@ -136,7 +154,7 @@ module Mongoid
           end
         end
       end
-      
+
       def get_fields(document)
         {}.tap do |fields|
           search_fields.each do |key|
@@ -167,6 +185,11 @@ module Mongoid
 
       def search_ids(id_range, options = {})
         MongoidSphinx::search_ids(id_range, options.merge(:class => self)).map(&:sphinx_id)
+      end
+
+      # override this method
+      def delta_models
+        delta
       end
 
       # override this method

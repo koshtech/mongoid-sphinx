@@ -46,9 +46,9 @@ describe Mongoid::Sphinx do
       doc.elements.to_a('/docset/schema/field').map{ |f| f.attributes['name'] }.should be == %w(title content)
     end
     it "has attributes" do
-      doc.elements.to_a('/docset/schema/attr').length.should be == 2
-      doc.elements.to_a('/docset/schema/attr').map{ |a| a.attributes['name'] }.should be == %w(class_name type)
-      doc.elements.to_a('/docset/schema/attr').map{ |a| a.attributes['type'] }.should be == %w(string string)
+      doc.elements.to_a('/docset/schema/attr').length.should be == 3
+      doc.elements.to_a('/docset/schema/attr').map{ |a| a.attributes['name'] }.should be == %w[class_name class_filter type]
+      doc.elements.to_a('/docset/schema/attr').map{ |a| a.attributes['type'] }.should be == %w[string int string]
     end
     it "has a single document" do
       doc.elements.to_a('/docset/document').length.should be == 1

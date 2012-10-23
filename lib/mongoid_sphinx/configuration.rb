@@ -5,19 +5,19 @@ module MongoidSphinx
   class Configuration
     include Singleton
 
-    SourceOptions = %w( mysql_connect_flags mysql_ssl_cert mysql_ssl_key
+    SourceOptions = %w[ mysql_connect_flags mysql_ssl_cert mysql_ssl_key
       mysql_ssl_ca sql_range_step sql_query_pre sql_query_post
       sql_query_killlist sql_ranged_throttle sql_query_post_index unpack_zlib
-      unpack_mysqlcompress unpack_mysqlcompress_maxsize )
+      unpack_mysqlcompress unpack_mysqlcompress_maxsize ]
 
-    IndexOptions  = %w( blend_chars charset_table charset_type charset_dictpath
+    IndexOptions  = %w[ blend_chars charset_table charset_type charset_dictpath
       docinfo enable_star exceptions expand_keywords hitless_words
       html_index_attrs html_remove_elements html_strip index_exact_words
       ignore_chars inplace_docinfo_gap inplace_enable inplace_hit_gap
       inplace_reloc_factor inplace_write_factor min_infix_len min_prefix_len
       min_stemming_len min_word_len mlock morphology ngram_chars ngram_len
       ondisk_dict overshort_step phrase_boundary phrase_boundary_step preopen
-      stopwords stopwords_step wordforms )
+      stopwords stopwords_step wordforms ]
 
     attr_accessor :allow_star
     attr_accessor :searchd_file_path, :model_directories, :indexed_models
@@ -31,7 +31,7 @@ module MongoidSphinx
       @configuration.searchd.log        = "#{@root}/log/searchd.log"
       @configuration.searchd.query_log  = "#{@root}/log/searchd.query.log"
 
-      @controller = Riddle::Controller.new @configuration, "#{@root}/config/#{@env}.sphinx.conf"
+      @controller = Riddle::Controller.new(@configuration, "#{@root}/config/#{@env}.sphinx.conf")
 
       self.address              = '127.0.0.1'
       self.port                 = 9312
@@ -50,7 +50,7 @@ module MongoidSphinx
 
     def client
       @configuration ||= parse_config
-      Riddle::Client.new address, port
+      Riddle::Client.new(address, port)
     end
 
     def build(file_path=nil)
@@ -60,7 +60,7 @@ module MongoidSphinx
 
       MongoidSphinx.context.indexed_models.each do |model|
         model = model.constantize
-        @configuration.indices.concat model.to_riddle
+        @configuration.indices.concat(model.to_riddle)
       end
 
       open(file_path, 'w') do |file|
@@ -163,15 +163,15 @@ module MongoidSphinx
         conf.each do |key,value|
           self.send("#{key}=", value) if self.respond_to?("#{key}=")
 
-          set_sphinx_setting self.source_options, key, value, SourceOptions
-          set_sphinx_setting self.index_options,  key, value, IndexOptions
-          set_sphinx_setting @configuration.searchd, key, value
-          set_sphinx_setting @configuration.indexer, key, value
+          set_sphinx_setting(self.source_options, key, value, SourceOptions)
+          set_sphinx_setting(self.index_options, key, value, IndexOptions)
+          set_sphinx_setting(@configuration.searchd, key, value)
+          set_sphinx_setting(@configuration.indexer, key, value)
         end
       end
 
       if self.allow_star
-        self.index_options[:enable_star]    = true
+        self.index_options[:enable_star] = true
         self.index_options[:min_prefix_len] = 1
       end
     end
@@ -196,4 +196,3 @@ module MongoidSphinx
     end
   end
 end
-

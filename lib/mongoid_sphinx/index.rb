@@ -1,16 +1,19 @@
 module MongoidSphinx
   class Index
-    attr_accessor :name, :model, :source
+    attr_accessor :name, :model, :source, :delta
 
     def initialize(model)
-      @name         = self.class.name_for model
-      @model        = model
-      @options      = model.index_options
-      @source       = Riddle::Configuration::XMLSource.new( "#{core_name}_0", config.source_options[:type])
+      @name    = self.class.name_for model
+      @model   = model
+      @options = model.index_options
+      @source  = Riddle::Configuration::XMLSource.new("#{core_name}_0", config.source_options[:type])
+      @delta   = Riddle::Configuration::XMLSource.new("#{delta_name}_0", config.source_options[:type])
       if defined?(Rails)
-        @source.xmlpipe_command = "RAILS_ENV=#{Rails.env} rails runner '#{model.to_s}.sphinx_stream'"
+        @source.xmlpipe_command = "RAILS_ENV=#{Rails.env} rails runner '#{model.to_s}.sphinx_stream' 2>/dev/null"
+        @delta.xmlpipe_command = "RAILS_ENV=#{Rails.env} rails runner '#{model.to_s}.delta_stream' 2>/dev/null"
       else
-        @source.xmlpipe_command = "script/runner '#{model.to_s}.sphinx_stream'"
+        @source.xmlpipe_command = "script/runner '#{model.to_s}.sphinx_stream' 2>/dev/null"
+        @delta.xmlpipe_command = "script/runner '#{model.to_s}.delta_stream' 2>/dev/null"
       end
     end
 
@@ -39,14 +42,20 @@ module MongoidSphinx
     end
 
     def to_riddle
-      indexes = [to_riddle_for_core]
+      indexes = []
+      indexes << to_riddle_for_delta if delta?
+      indexes << to_riddle_for_core
       indexes << to_riddle_for_distributed
+    end
+
+    def delta?
+      model && model.delta?
     end
 
     private
 
     def utf8?
-      options[:charset_type] == "utf-8"
+      options[:charset_type] == 'utf-8'
     end
 
     def config
@@ -54,18 +63,29 @@ module MongoidSphinx
     end
 
     def to_riddle_for_core
-      index = Riddle::Configuration::Index.new core_name
-      index.path = File.join config.searchd_file_path, index.name
+      index = Riddle::Configuration::Index.new(core_name)
+      index.path = File.join(config.searchd_file_path, index.name)
 
-      set_configuration_options_for_indexes index
+      set_configuration_options_for_indexes(index)
       index.sources << @source
 
       index
     end
 
+    def to_riddle_for_delta
+      index = Riddle::Configuration::Index.new(delta_name)
+      index.path = File.join(config.searchd_file_path, index.name)
+
+      set_configuration_options_for_indexes(index)
+      index.sources << @delta
+
+      index
+    end
+
     def to_riddle_for_distributed
-      index = Riddle::Configuration::DistributedIndex.new name
+      index = Riddle::Configuration::DistributedIndex.new(name)
       index.local_indices << core_name
+      index.local_indices << delta_name if delta?
       index
     end
 
