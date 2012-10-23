@@ -25,11 +25,22 @@ module MongoidSphinx
         end
       end
 
+      client.index_weights = options[:index_weights] if options.key?(:index_weights)
+
       if classes = options[:class]
         classes = Array(classes).map{ |klass| class_filter(klass) }
         client.filters << Riddle::Client::Filter.new('class_filter', classes, false)
       end
     end
+  end
+
+  def self.extract_index_weights(classes)
+    names = extract_index_names(classes)
+    Hash[names.zip([1]*names.length)]
+  end
+
+  def self.extract_index_names(classes)
+    classes.map(&:index_names).flatten
   end
 
   def self.class_filter(klass)
@@ -38,7 +49,15 @@ module MongoidSphinx
 
   def self.search(query, options = {})
     client = default_client(options)
-    results = client.query(query, options[:index] || '*')
+    indexes =
+      if options[:index]
+        options[:index]
+      elsif options[:class]
+        extract_index_names(Array(options[:class])).join(',')
+      else
+        '*'
+      end
+    results = client.query(query, indexes)
     process_results(results)
   end
 
@@ -61,6 +80,13 @@ module MongoidSphinx
     client.match_mode = :extended
     client.limit = options[:limit] if options.key?(:limit)
     client.max_matches = options[:max_matches] if options.key?(:max_matches)
+
+    if options.key?(:index_weights)
+      client.index_weights = options[:index_weights]
+    elsif options[:class]
+      client.index_weights = extract_index_weights(Array(options[:class]))
+    end
+
     if classes = options[:class]
       classes = Array(classes).map{ |klass| class_filter(klass) }
       client.filters << Riddle::Client::Filter.new('class_filter', classes, false)

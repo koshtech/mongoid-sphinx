@@ -34,7 +34,7 @@ module Mongoid
         fields.values,
         self.class.internal_sphinx_index.core_name,
         options)
-      Hash[[fields.keys,values].transpose]
+        Hash[[fields.keys,values].transpose]
     end
     alias :sphinx_excerpts :excerpts
 
@@ -56,12 +56,6 @@ module Mongoid
       sid
     end
 
-    def index_delta
-      config = MongoidSphinx::Configuration.instance
-      rotate = MongoidSphinx.sphinx_running? ? '--rotate' : ''
-      `#{config.bin_path}#{config.indexer_binary_name} --config "#{config.config_file}" #{rotate} #{sphinx_index.delta_name}`
-    end
-
     module ClassMethods
       def search_index(options={})
         self.search_fields = options[:fields] || []
@@ -76,6 +70,12 @@ module Mongoid
 
       def delta?
         true
+      end
+
+      def index_delta
+        config = MongoidSphinx::Configuration.instance
+        rotate = MongoidSphinx.sphinx_running? ? '--rotate' : ''
+        `#{config.bin_path}#{config.indexer_binary_name} --config "#{config.config_file}" #{rotate} #{internal_sphinx_index.delta_name}`
       end
 
       def internal_sphinx_index
@@ -126,6 +126,7 @@ module Mongoid
             get_attributes(document).each{ |key, value| xml << "<#{key}>#{value}</#{key}>" }
             xml << '</sphinx:document>'
           end
+          document.update_attributes(:delta => false)
         end
         xml << '</sphinx:docset>'
         xml.join("\n")
@@ -133,24 +134,24 @@ module Mongoid
 
       def get_attributes(document)
         {}.tap do |attributes|
-        search_attributes.each do |key, type|
-          next unless document.respond_to?(key.to_sym)
-          value = document.send(key.to_sym)
-          value = case type
-            when 'bool'
-              value ? 1 : 0
-            when 'timestamp'
-              value.is_a?(Date) ? value.to_time.to_i : value.to_i
-            else
-              if value.is_a?(Array)
-                value.join(", ")
-              elsif value.is_a?(Hash)
-                value.values.join(" : ")
-              else
-                value.to_s
-              end
-            end
-          attributes[key] = value
+          search_attributes.each do |key, type|
+            next unless document.respond_to?(key.to_sym)
+            value = document.send(key.to_sym)
+            value = case type
+                    when 'bool'
+                      value ? 1 : 0
+                    when 'timestamp'
+                      value.is_a?(Date) ? value.to_time.to_i : value.to_i
+                    else
+                      if value.is_a?(Array)
+                        value.join(', ')
+                      elsif value.is_a?(Hash)
+                        value.values.join(' : ')
+                      else
+                        value.to_s
+                      end
+                    end
+            attributes[key] = value
           end
         end
       end
@@ -161,12 +162,12 @@ module Mongoid
             next unless document.respond_to?(key.to_sym)
             value = document.send(key.to_sym)
             value = if value.is_a?(Array)
-              value.join(", ")
-            elsif value.is_a?(Hash)
-              value.values.join(" : ")
-            else
-              value.to_s
-            end
+                      value.join(', ')
+                    elsif value.is_a?(Hash)
+                      value.values.join(' : ')
+                    else
+                      value.to_s
+                    end
             fields[key] = value
           end
         end
@@ -189,12 +190,16 @@ module Mongoid
 
       # override this method
       def delta_models
-        delta
+        embedded? ? [] : delta
       end
 
       # override this method
       def sphinx_models
         embedded? ? [] : all
+      end
+
+      def index_names
+        [internal_sphinx_index.core_name, internal_sphinx_index.delta_name]
       end
     end
   end

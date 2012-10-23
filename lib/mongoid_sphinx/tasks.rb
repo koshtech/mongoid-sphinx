@@ -71,9 +71,11 @@ namespace :mongoid_sphinx do
     puts config.controller.index
   end
 
-  desc "Stop Sphinx (if it's running), rebuild the indexes, and start Sphinx"
+  desc "Stop Sphinx (if it's running), delete and rebuild the indexes, and start Sphinx"
   task :rebuild => :environment do
     Rake::Task['mongoid_sphinx:stop'].invoke if sphinx_running?
+    config = MongoidSphinx::Configuration.instance
+    Dir["#{config.searchd_file_path}/*.sp?"].each { |file| File.delete(file) }
     Rake::Task['mongoid_sphinx:index'].invoke
     Rake::Task['mongoid_sphinx:start'].invoke
   end
@@ -81,8 +83,9 @@ namespace :mongoid_sphinx do
   desc "Run Sphinx in the foreground"
   task :run_in_foreground => :environment do
     Rake::Task['mongoid_sphinx:stop'].invoke if sphinx_running?
-    Rake::Task['mongoid_sphinx:index'].invoke
     config = MongoidSphinx::Configuration.instance
+    Dir["#{config.searchd_file_path}/*.sp?"].each { |file| File.delete(file) }
+    Rake::Task['mongoid_sphinx:index'].invoke
     $kill_sphinx_on_exit = false
     unless pid = fork
       exec "#{config.bin_path}#{config.searchd_binary_name} --pidfile --config #{config.config_file} --nodetach"
