@@ -21,11 +21,11 @@ This is a fork of a fork of a fork and all due credit goes out to Matt Hodgson a
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ['lib']
 
-  s.add_runtime_dependency 'mongoid',       '~> 2.4.0'
+  s.add_runtime_dependency 'mongoid',       '~> 3.1.0'
   s.add_dependency         'riddle',        '~> 1.5.0'
-  s.add_dependency         'activesupport', '~> 3.1.0'
+  s.add_dependency         'activesupport', '~> 3.2.0'
 
-  s.add_development_dependency 'bson_ext',  '~> 1.5.0'
+  s.add_development_dependency 'bson_ext',  '>= 1.5.0'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'faker'
   s.add_development_dependency 'rspec',     '>= 2.11.0'

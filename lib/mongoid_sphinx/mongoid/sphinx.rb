@@ -22,7 +22,7 @@ module Mongoid
 
       field :sphinx_id, :type => Integer
       field :delta, :type => Boolean, :default => false
-      index :sphinx_id, unique: true
+      index( {sphinx_id: 1}, {unique: true})
 
       scope :delta, where(:delta => true)
     end
