@@ -52,7 +52,8 @@ module Mongoid
 
     def generate_sphinx_id_and_save
       sid = sphinx_id || generate_sphinx_id
-      update_attributes(sphinx_id:sid)
+      self.sphinx_id = sid
+      self.save validate: false
       sid
     end
 
@@ -126,7 +127,8 @@ module Mongoid
             get_attributes(document).each{ |key, value| xml << "<#{key}>#{value}</#{key}>" }
             xml << '</sphinx:document>'
           end
-          document.update_attributes(:delta => false)
+          document.delta = false
+          document.save validate: false
         end
         xml << '</sphinx:docset>'
         xml.join("\n")
