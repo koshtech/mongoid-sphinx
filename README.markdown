@@ -21,7 +21,7 @@ and a MongoDB installation. Just add this to your Gemfile:
 
     gem riddle
     gem mongoid
-    gem mongoid-sphinx, :require => 'mongoid_sphinx', :git => 'git://github.com/llamadigital/mongoid-sphinx.git'
+    gem mongoid-sphinx, :require => 'mongoid_sphinx', :git => 'https://github.com/totothink/mongoid-sphinx.git'
 
 No additional configuraton is needed for interfacing with MongoDB: Setup is
 done when Mongoid is able to talk to the MongoDB server.
