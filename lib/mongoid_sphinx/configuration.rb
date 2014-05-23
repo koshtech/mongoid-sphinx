@@ -27,7 +27,7 @@ module MongoidSphinx
     def initialize
       init_root_env
       @configuration = Riddle::Configuration.new
-      @configuration.searchd.pid_file   = "#{@root}/log/searchd.#{@env}.pid"
+      @configuration.searchd.pid_file   = "#{@root}/tmp/pids/searchd.#{@env}.pid"
       @configuration.searchd.log        = "#{@root}/log/searchd.log"
       @configuration.searchd.query_log  = "#{@root}/log/searchd.query.log"
 
